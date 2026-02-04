@@ -6,7 +6,18 @@ export interface Task {
 }
 
 function createTasks() {
-  const { subscribe, update, set }: Writable<Task[]> = writable([]);
+  let initial: Task[] = [];
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('tasks');
+    initial = stored ? JSON.parse(stored) : [];
+  }
+  const { subscribe, update, set }: Writable<Task[]> = writable(initial);
+
+  if (typeof window !== 'undefined') {
+    subscribe(tasks => {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    });
+  }
 
   function addTask(name: string) {
     update(tasks => [...tasks, { id: crypto.randomUUID(), name }]);
