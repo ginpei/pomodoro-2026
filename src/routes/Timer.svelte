@@ -1,8 +1,9 @@
 <script lang="ts">
 import { timer } from '$lib/timer';
-import { onDestroy } from 'svelte';
+import { onDestroy, onMount } from 'svelte';
 import { get } from 'svelte/store';
 let timerValue = get(timer);
+onMount(() => { timer.restore(); });
 const unsubscribe = timer.subscribe(value => timerValue = value);
 onDestroy(unsubscribe);
 
