@@ -4,19 +4,30 @@ import { get } from 'svelte/store';
 let taskList: Task[] = get(tasks);
 const unsubTasks = tasks.subscribe(v => taskList = v);
 
+import { onMount, tick } from 'svelte';
 let newTask = '';
 let editingId: string | null = null;
 let editingName = '';
+let newTaskInput: HTMLInputElement;
+let editInputs: Record<string, HTMLInputElement> = {};
 
-function addTask() {
+async function addTask() {
   if (newTask.trim()) {
     tasks.addTask(newTask.trim());
     newTask = '';
+    await tick();
+    newTaskInput?.focus();
   }
 }
-function startEdit(id: string, name: string) {
+async function startEdit(id: string, name: string) {
   editingId = id;
   editingName = name;
+  await tick();
+  const input = editInputs[id];
+  if (input) {
+    input.focus();
+    input.select();
+  }
 }
 function saveEdit(id: string) {
   if (editingName.trim()) {
@@ -41,6 +52,7 @@ function deleteTask(id: string) {
       class="flex-1 border rounded px-2 py-1"
       placeholder="Add new task"
       bind:value={newTask}
+      bind:this={newTaskInput}
       on:keydown={(e) => e.key === 'Enter' && addTask()}
     />
     <button class="bg-blue-500 text-white px-3 py-1 rounded" on:click={addTask}>Add</button>
@@ -49,7 +61,7 @@ function deleteTask(id: string) {
     {#each taskList as task}
       <li class="flex items-center gap-2 mb-2">
         {#if editingId === task.id}
-          <input class="flex-1 border rounded px-2 py-1" bind:value={editingName} on:keydown={(e) => e.key === 'Enter' && saveEdit(task.id)} />
+          <input class="flex-1 border rounded px-2 py-1" bind:value={editingName} bind:this={editInputs[task.id]} on:keydown={(e) => e.key === 'Enter' && saveEdit(task.id)} />
           <button class="bg-green-500 text-white px-2 py-1 rounded" on:click={() => saveEdit(task.id)}>Save</button>
           <button class="bg-gray-400 text-white px-2 py-1 rounded" on:click={cancelEdit}>Cancel</button>
         {:else}
