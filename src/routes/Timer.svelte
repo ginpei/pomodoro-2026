@@ -14,9 +14,7 @@ onDestroy(unsubscribe);
 function start() { timer.start(); }
 function pause() { timer.pause(); }
 function stop() { timer.stop(); }
-function setWork() { timer.setMode('work', 1500); }
-function setBreak() { timer.setMode('break', 300); }
-function setCustom() { timer.setCustom(600); }
+
 
 function format(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, '0');
@@ -54,9 +52,7 @@ function getHandProgress(timerValue: any) {
       <button class="px-4 py-2 rounded bg-red-500 text-white disabled:opacity-60" disabled>Stop</button>
     </div>
     <div class="flex gap-2">
-      <button class="px-4 py-2 rounded bg-blue-500 text-white disabled:opacity-60" disabled>Work</button>
-      <button class="px-4 py-2 rounded bg-purple-500 text-white disabled:opacity-60" disabled>Break</button>
-      <button class="px-4 py-2 rounded bg-gray-500 text-white disabled:opacity-60" disabled>Custom</button>
+      
     </div>
     <div class="text-gray-300 animate-pulse">Mode: --</div>
   </div>
@@ -98,10 +94,8 @@ function getHandProgress(timerValue: any) {
       <button class="px-4 py-2 rounded bg-red-500 text-white" on:click={stop}>Stop</button>
     </div>
     <div class="flex gap-2">
-      <button class="px-4 py-2 rounded bg-blue-500 text-white" on:click={setWork}>Work</button>
-      <button class="px-4 py-2 rounded bg-purple-500 text-white" on:click={setBreak}>Break</button>
-      <button class="px-4 py-2 rounded bg-gray-500 text-white" on:click={setCustom}>Custom</button>
+      
     </div>
-    <div>Mode: {timerValue.mode}</div>
+    
   </div>
 {/if}
