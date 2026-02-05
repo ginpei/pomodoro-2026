@@ -99,18 +99,14 @@ function createTimer() {
   }
 
   function start() {
-    console.log('[timer] start called');
     update(state => {
       if (interval == null && state.remaining > 0) {
         // Start interval if not already started and timer should be running
-        console.log('[timer] starting interval');
         interval = setInterval(() => {
           update(s => {
             const next = tick(s);
-            console.log('[timer] tick', next);
             saveState(next);
             if (!next.running && interval) {
-              console.log('[timer] clearing interval');
               clearInterval(interval);
               interval = null;
             }
@@ -119,29 +115,24 @@ function createTimer() {
         }, 1000);
       }
       const next = { ...state, running: true };
-      console.log('[timer] set running', next);
       saveState(next);
       return next;
     });
   }
 
   function pause() {
-    console.log('[timer] pause called');
     update(state => {
       if (state.running && interval) {
-        console.log('[timer] clearing interval');
         clearInterval(interval);
         interval = null;
       }
       const next = { ...state, running: false };
-      console.log('[timer] set paused', next);
       saveState(next);
       return next;
     });
   }
 
   function stop() {
-    console.log('[timer] stop called');
     pause();
     update(state => {
       const next = {
@@ -151,14 +142,12 @@ function createTimer() {
         remaining: state.workDuration,
         running: false
       };
-      console.log('[timer] set stopped', next);
       saveState(next);
       return next;
     });
   }
 
   function setMode(mode: TimerMode, duration: number) {
-    console.log('[timer] setMode called', mode, duration);
     pause();
     update(state => {
       const next = {
@@ -170,7 +159,6 @@ function createTimer() {
         workMode: mode === 'break' ? state.workMode : (mode === 'custom' ? 'custom' : 'work'),
         workDuration: mode === 'break' ? state.workDuration : duration
       };
-      console.log('[timer] set mode', next);
       saveState(next);
       return next;
     });
@@ -189,10 +177,8 @@ function createTimer() {
     setCustom,
     restore() {
       const state = loadState();
-      console.log('[timer] restore called', state);
       set(state);
       if (state.running && state.remaining > 0) {
-        console.log('[timer] auto-resume');
         saveState(state);
         start();
       }
