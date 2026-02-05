@@ -1,4 +1,5 @@
 import { timer, type TimerState } from './timer';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('timer logic', () => {
   beforeEach(() => {
@@ -16,7 +17,7 @@ describe('timer logic', () => {
     expect(state!.running).toBe(false);
   });
 
-  it('should start and count down', done => {
+  it('should start and count down', (done: () => void) => {
     timer.start();
     setTimeout(() => {
       let state: TimerState;
