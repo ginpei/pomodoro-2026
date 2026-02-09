@@ -96,37 +96,29 @@ function createTimer() {
   function deriveRunningState(state: TimerState, now: number): TimerState {
     const elapsedSeconds = Math.floor((now - state.startTime!) / 1000);
     if (elapsedSeconds <= 0) return state;
-    if (elapsedSeconds < state.duration) {
-      return { ...state, remaining: state.duration - elapsedSeconds };
-    }
-    const overflow = elapsedSeconds - state.duration;
-    if (state.mode === 'break') {
+    const workDuration = state.workDuration;
+    const breakDuration = DEFAULT_BREAK_DURATION;
+    const totalDuration = workDuration + breakDuration;
+    const offset = state.mode === 'break' ? workDuration : 0;
+    const cycleElapsed = (elapsedSeconds + offset) % totalDuration;
+    if (cycleElapsed < workDuration) {
       return {
         ...state,
         mode: 'work',
-        duration: state.workDuration,
-        remaining: state.workDuration,
-        running: false,
-        startTime: null
-      };
-    }
-    if (overflow < DEFAULT_BREAK_DURATION) {
-      return {
-        ...state,
-        mode: 'break',
-        duration: DEFAULT_BREAK_DURATION,
-        remaining: DEFAULT_BREAK_DURATION - overflow,
+        duration: workDuration,
+        remaining: workDuration - cycleElapsed,
         running: true,
-        startTime: now - overflow * 1000
+        startTime: now - cycleElapsed * 1000
       };
     }
+    const breakElapsed = cycleElapsed - workDuration;
     return {
       ...state,
-      mode: 'work',
-      duration: state.workDuration,
-      remaining: state.workDuration,
-      running: false,
-      startTime: null
+      mode: 'break',
+      duration: breakDuration,
+      remaining: breakDuration - breakElapsed,
+      running: true,
+      startTime: now - breakElapsed * 1000
     };
   }
 
@@ -137,8 +129,8 @@ function createTimer() {
         mode: 'work',
         duration: state.workDuration,
         remaining: state.workDuration,
-        running: false,
-        startTime: null
+        running: true,
+        startTime: Date.now()
       };
     }
     return {
