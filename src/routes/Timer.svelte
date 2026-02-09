@@ -35,7 +35,7 @@ $: activeTask = taskList.find(task => task.id === activeTaskId) ?? null;
 
 function start() { timer.start(); }
 function pause() { timer.pause(); }
-function stop() { timer.stop(); }
+function reset() { timer.reset(); }
 
 
 function format(sec: number) {
@@ -165,7 +165,7 @@ $: breakDash = 2 * Math.PI * RADIUS * (breakDuration / totalDuration);
     <div class="flex gap-2">
       <button class="px-4 py-2 rounded bg-green-500 text-white disabled:bg-green-200 disabled:opacity-60" disabled>Start</button>
       <button class="px-4 py-2 rounded bg-yellow-500 text-white disabled:bg-yellow-200 disabled:opacity-60" disabled>Pause</button>
-      <button class="px-4 py-2 rounded bg-red-500 text-white disabled:opacity-60" disabled>Stop</button>
+      <button class="px-4 py-2 rounded bg-red-500 text-white disabled:opacity-60" disabled>Reset</button>
     </div>
     <div class="text-gray-300 animate-pulse">Task: --</div>
   </div>
@@ -228,7 +228,7 @@ $: breakDash = 2 * Math.PI * RADIUS * (breakDuration / totalDuration);
     <div class="flex gap-2">
       <button class="px-4 py-2 rounded bg-green-500 text-white disabled:bg-green-200" on:click={start} disabled={timerValue.running}>Start</button>
       <button class="px-4 py-2 rounded bg-yellow-500 text-white disabled:bg-yellow-200" on:click={pause} disabled={!timerValue.running}>Pause</button>
-      <button class="px-4 py-2 rounded bg-red-500 text-white" on:click={stop}>Stop</button>
+      <button class="px-4 py-2 rounded bg-red-500 text-white" on:click={reset}>Reset</button>
     </div>
     <div class="text-sm text-gray-700">Task: {activeTask ? activeTask.name : 'None'}</div>
     

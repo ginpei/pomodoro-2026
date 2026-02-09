@@ -29,7 +29,7 @@ describe('timer logic', () => {
   beforeEach(() => {
     ensureLocalStorage();
     timer.setMode('work', 10);
-    timer.stop();
+    timer.reset();
   });
 
   it('should initialize with correct state', () => {
@@ -50,19 +50,19 @@ describe('timer logic', () => {
       unsub!;
       expect(state!.running).toBe(true);
       expect(state!.remaining).toBeLessThan(10);
-      timer.stop();
+      timer.reset();
       done();
     }, 1200);
   });
 
-  it('should pause and stop', () => {
+  it('should pause and reset', () => {
     timer.start();
     timer.pause();
     let state: TimerState;
     const unsub = timer.subscribe(s => (state = s));
     unsub!;
     expect(state!.running).toBe(false);
-    timer.stop();
+    timer.reset();
     expect(state!.remaining).toBe(10);
   });
 
@@ -87,7 +87,7 @@ describe('timer logic', () => {
     unsub!;
     expect(state!.remaining).toBe(5);
     expect(state!.running).toBe(true);
-    timer.stop();
+    timer.reset();
     vi.useRealTimers();
   });
 });

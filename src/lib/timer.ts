@@ -187,7 +187,7 @@ function createTimer() {
     });
   }
 
-  function stop() {
+  function reset() {
     pause();
     update(state => {
       const next: TimerState = {
@@ -255,7 +255,7 @@ function createTimer() {
       subscribe,
       start,
       pause,
-      stop,
+      reset,
       setMode,
       setProgress,
       restore() {
