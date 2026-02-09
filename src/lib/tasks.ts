@@ -1,66 +1,134 @@
-import { get, writable, type Writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
+import {
+  addTask as addTaskToState,
+  deleteTask as deleteTaskFromState,
+  editTask as editTaskInState,
+  normalizeTaskState,
+  selectTask as selectTaskInState,
+  setTasks as setTasksInState,
+  type Task,
+  type TaskState
+} from './tasks-model';
 
-export interface Task {
-  id: string;
-  name: string;
+export type { Task, TaskState } from './tasks-model';
+
+export interface TaskStorage {
+  loadTasks(): Task[];
+  loadSelectedTaskId(): string | null;
+  saveTasks(tasks: Task[]): void;
+  saveSelectedTaskId(taskId: string | null): void;
 }
 
+export interface TaskStoreOptions {
+  storage?: TaskStorage;
+  generateId?: () => string;
+  initialState?: TaskState;
+}
+
+const TASKS_KEY = 'tasks';
 const SELECTED_TASK_KEY = 'pomodoro-selected-task';
 
-function createSelectedTaskId() {
-  let initial: string | null = null;
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(SELECTED_TASK_KEY);
-    initial = stored ? stored : null;
-  }
-  const { subscribe, set }: Writable<string | null> = writable(initial);
-
-  if (typeof window !== 'undefined') {
-    subscribe(value => {
-      if (value) {
-        localStorage.setItem(SELECTED_TASK_KEY, value);
-      } else {
-        localStorage.removeItem(SELECTED_TASK_KEY);
-      }
-    });
-  }
-
-  return { subscribe, set };
+function createNoopTaskStorage(): TaskStorage {
+  return {
+    loadTasks() {
+      return [];
+    },
+    loadSelectedTaskId() {
+      return null;
+    },
+    saveTasks() {},
+    saveSelectedTaskId() {}
+  };
 }
 
-export const selectedTaskId = createSelectedTaskId();
-
-function createTasks() {
-  let initial: Task[] = [];
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('tasks');
-    initial = stored ? JSON.parse(stored) : [];
+function createBrowserTaskStorage(): TaskStorage {
+  if (typeof window === 'undefined') {
+    return createNoopTaskStorage();
   }
-  const { subscribe, update, set }: Writable<Task[]> = writable(initial);
-
-  if (typeof window !== 'undefined') {
-    subscribe(tasks => {
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-      const selected = get(selectedTaskId);
-      if (selected && !tasks.some(task => task.id === selected)) {
-        selectedTaskId.set(null);
+  const storage = window.localStorage;
+  return {
+    loadTasks() {
+      const raw = storage.getItem(TASKS_KEY);
+      return raw ? (JSON.parse(raw) as Task[]) : [];
+    },
+    loadSelectedTaskId() {
+      const raw = storage.getItem(SELECTED_TASK_KEY);
+      return raw ? raw : null;
+    },
+    saveTasks(tasks) {
+      storage.setItem(TASKS_KEY, JSON.stringify(tasks));
+    },
+    saveSelectedTaskId(taskId) {
+      if (taskId) {
+        storage.setItem(SELECTED_TASK_KEY, taskId);
+      } else {
+        storage.removeItem(SELECTED_TASK_KEY);
       }
+    }
+  };
+}
+
+export function createTaskStore(options: TaskStoreOptions = {}) {
+  const storage = options.storage ?? createBrowserTaskStorage();
+  const generateId =
+    options.generateId ??
+    (() => {
+      const cryptoApi = globalThis.crypto;
+      if (typeof cryptoApi?.randomUUID === 'function') {
+        return cryptoApi.randomUUID();
+      }
+      throw new Error('crypto.randomUUID is not available');
     });
+
+  const initial = options.initialState
+    ? normalizeTaskState(options.initialState)
+    : normalizeTaskState({
+        tasks: storage.loadTasks(),
+        selectedTaskId: storage.loadSelectedTaskId()
+      });
+
+  const { subscribe, update, set }: Writable<TaskState> = writable(initial);
+
+  function persist(state: TaskState) {
+    storage.saveTasks(state.tasks);
+    storage.saveSelectedTaskId(state.selectedTaskId);
   }
+
+  subscribe(persist);
 
   function addTask(name: string) {
-    update(tasks => [...tasks, { id: crypto.randomUUID(), name }]);
+    update(state => addTaskToState(state, name, generateId()));
   }
 
   function editTask(id: string, name: string) {
-    update(tasks => tasks.map(t => t.id === id ? { ...t, name } : t));
+    update(state => editTaskInState(state, id, name));
   }
 
   function deleteTask(id: string) {
-    update(tasks => tasks.filter(t => t.id !== id));
+    update(state => deleteTaskFromState(state, id));
   }
 
-  return { subscribe, addTask, editTask, deleteTask, set };
+  function selectTask(id: string | null) {
+    update(state => selectTaskInState(state, id));
+  }
+
+  function setTasks(tasks: Task[]) {
+    update(state => setTasksInState(state, tasks));
+  }
+
+  function setState(state: TaskState) {
+    set(normalizeTaskState(state));
+  }
+
+  return {
+    subscribe,
+    addTask,
+    editTask,
+    deleteTask,
+    selectTask,
+    setTasks,
+    setState
+  };
 }
 
-export const tasks = createTasks();
+export const taskStore = createTaskStore();

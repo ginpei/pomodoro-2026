@@ -1,11 +1,10 @@
 <script lang="ts">
 import { DEFAULT_BREAK_DURATION, timer, type TimerState } from '$lib/timer';
-import { selectedTaskId, tasks, type Task } from '$lib/tasks';
+import { taskStore, type Task } from '$lib/tasks';
 import { onDestroy, onMount } from 'svelte';
 import { get } from 'svelte/store';
 let timerValue = get(timer);
-let taskList: Task[] = [];
-let activeTaskId: string | null = null;
+let taskState = get(taskStore);
 let activeTask: Task | null = null;
 let hydrated = false;
 let dragPreview: TimerState | null = null;
@@ -23,15 +22,13 @@ onMount(() => {
   hydrated = true;
 });
 const unsubscribe = timer.subscribe(value => timerValue = value);
-const unsubscribeTasks = tasks.subscribe(value => taskList = value);
-const unsubscribeSelected = selectedTaskId.subscribe(value => activeTaskId = value);
+const unsubscribeTasks = taskStore.subscribe(value => taskState = value);
 onDestroy(() => {
   unsubscribe();
   unsubscribeTasks();
-  unsubscribeSelected();
 });
 
-$: activeTask = taskList.find(task => task.id === activeTaskId) ?? null;
+$: activeTask = taskState.tasks.find(task => task.id === taskState.selectedTaskId) ?? null;
 
 function start() { timer.start(); }
 function pause() { timer.pause(); }

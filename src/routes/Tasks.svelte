@@ -1,14 +1,13 @@
 <script lang="ts">
-import { selectedTaskId, tasks, type Task } from '$lib/tasks';
+import { taskStore, type Task } from '$lib/tasks';
 import { get } from 'svelte/store';
-let taskList: Task[] = [];
-let activeTaskId = get(selectedTaskId);
+const initial = get(taskStore);
+let taskList: Task[] = initial.tasks;
+let activeTaskId: string | null = initial.selectedTaskId;
 let hydrated = false;
-const unsubTasks = tasks.subscribe(v => {
-  taskList = v;
-});
-const unsubSelected = selectedTaskId.subscribe(v => {
-  activeTaskId = v;
+const unsubTasks = taskStore.subscribe(v => {
+  taskList = v.tasks;
+  activeTaskId = v.selectedTaskId;
 });
 onMount(() => {
   hydrated = true;
@@ -23,12 +22,11 @@ let editInputs: Record<string, HTMLInputElement> = {};
 
 onDestroy(() => {
   unsubTasks();
-  unsubSelected();
 });
 
 async function addTask() {
   if (newTask.trim()) {
-    tasks.addTask(newTask.trim());
+    taskStore.addTask(newTask.trim());
     newTask = '';
     await tick();
     newTaskInput?.focus();
@@ -46,7 +44,7 @@ async function startEdit(id: string, name: string) {
 }
 function saveEdit(id: string) {
   if (editingName.trim()) {
-    tasks.editTask(id, editingName.trim());
+    taskStore.editTask(id, editingName.trim());
     editingId = null;
     editingName = '';
   }
@@ -56,10 +54,10 @@ function cancelEdit() {
   editingName = '';
 }
 function deleteTask(id: string) {
-  tasks.deleteTask(id);
+  taskStore.deleteTask(id);
 }
 function toggleSelect(id: string) {
-  selectedTaskId.set(activeTaskId === id ? null : id);
+  taskStore.selectTask(activeTaskId === id ? null : id);
 }
 </script>
 
