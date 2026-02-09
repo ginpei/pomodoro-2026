@@ -1,7 +1,7 @@
 // Timer logic for Pomodoro
 import { writable, type Writable } from 'svelte/store';
 
-export type TimerMode = 'work' | 'break' | 'custom';
+export type TimerMode = 'work' | 'break';
 
 export const DEFAULT_WORK_DURATION = 1500;
 export const DEFAULT_BREAK_DURATION = 300;
@@ -13,7 +13,6 @@ export interface TimerState {
   running: boolean;
   startTime: number | null; // ms since epoch when current phase started
   workDuration: number; // seconds
-  workMode: 'work' | 'custom';
 }
 
 function createTimer() {
@@ -23,16 +22,7 @@ function createTimer() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<TimerState>;
-        const mode: TimerMode =
-          parsed.mode === 'work' || parsed.mode === 'break' || parsed.mode === 'custom'
-            ? parsed.mode
-            : 'work';
-        const workMode =
-          parsed.workMode === 'custom' || parsed.workMode === 'work'
-            ? parsed.workMode
-            : mode === 'custom'
-              ? 'custom'
-              : 'work';
+        const mode: TimerMode = parsed.mode === 'break' ? 'break' : 'work';
         const workDuration =
           typeof parsed.workDuration === 'number'
             ? parsed.workDuration
@@ -63,8 +53,7 @@ function createTimer() {
           remaining,
           running,
           startTime,
-          workDuration,
-          workMode
+          workDuration
         };
         if (state.running && state.startTime != null) {
           state = deriveRunningState(state, Date.now());
@@ -78,8 +67,7 @@ function createTimer() {
       remaining: DEFAULT_WORK_DURATION,
       running: false,
       startTime: null,
-      workDuration: DEFAULT_WORK_DURATION,
-      workMode: 'work'
+      workDuration: DEFAULT_WORK_DURATION
     };
   }
   function saveState(state: TimerState) {
@@ -115,7 +103,7 @@ function createTimer() {
     if (state.mode === 'break') {
       return {
         ...state,
-        mode: state.workMode,
+        mode: 'work',
         duration: state.workDuration,
         remaining: state.workDuration,
         running: false,
@@ -134,7 +122,7 @@ function createTimer() {
     }
     return {
       ...state,
-      mode: state.workMode,
+      mode: 'work',
       duration: state.workDuration,
       remaining: state.workDuration,
       running: false,
@@ -146,7 +134,7 @@ function createTimer() {
     if (state.mode === 'break') {
       return {
         ...state,
-        mode: state.workMode,
+        mode: 'work',
         duration: state.workDuration,
         remaining: state.workDuration,
         running: false,
@@ -210,9 +198,9 @@ function createTimer() {
   function stop() {
     pause();
     update(state => {
-      const next = {
+      const next: TimerState = {
         ...state,
-        mode: state.workMode,
+        mode: 'work',
         duration: state.workDuration,
         remaining: state.workDuration,
         running: false,
@@ -233,16 +221,11 @@ function createTimer() {
         remaining: duration,
         running: false,
         startTime: null,
-        workMode: mode === 'break' ? state.workMode : (mode === 'custom' ? 'custom' : 'work'),
         workDuration: mode === 'break' ? state.workDuration : duration
       };
       saveState(next);
       return next;
     });
-  }
-
-  function setCustom(duration: number) {
-    setMode('custom', duration);
   }
 
   function setProgress(progress: number) {
@@ -254,7 +237,7 @@ function createTimer() {
       let duration: number;
       let remaining: number;
       if (elapsed <= state.workDuration) {
-        mode = state.workMode;
+        mode = 'work';
         duration = state.workDuration;
         remaining = Math.round(duration - elapsed);
       } else {
@@ -276,15 +259,14 @@ function createTimer() {
     });
   }
 
-  return {
-    subscribe,
-    start,
-    pause,
-    stop,
-    setMode,
-    setCustom,
-    setProgress,
-    restore() {
+    return {
+      subscribe,
+      start,
+      pause,
+      stop,
+      setMode,
+      setProgress,
+      restore() {
       const state = loadState();
       set(state);
       if (state.running && state.remaining > 0) {

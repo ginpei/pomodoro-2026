@@ -79,7 +79,7 @@ function deriveStateForProgress(state: TimerState, progress: number): TimerState
   const elapsed = clamped * totalDuration;
   if (elapsed <= state.workDuration) {
     const remaining = clamp(Math.round(state.workDuration - elapsed), 0, state.workDuration);
-    return { ...state, mode: state.workMode, duration: state.workDuration, remaining };
+    return { ...state, mode: 'work', duration: state.workDuration, remaining };
   }
   const breakElapsed = elapsed - state.workDuration;
   const remaining = clamp(Math.round(DEFAULT_BREAK_DURATION - breakElapsed), 0, DEFAULT_BREAK_DURATION);

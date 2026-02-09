@@ -78,8 +78,7 @@ describe('timer logic', () => {
         remaining: 10,
         running: true,
         startTime: now.getTime() - 5000,
-        workDuration: 10,
-        workMode: 'work'
+        workDuration: 10
       })
     );
     timer.restore();
