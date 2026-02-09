@@ -3,8 +3,8 @@ import { writable, type Writable } from 'svelte/store';
 
 export type TimerMode = 'work' | 'break' | 'custom';
 
-const DEFAULT_WORK_DURATION = 1500;
-const DEFAULT_BREAK_DURATION = 300;
+export const DEFAULT_WORK_DURATION = 1500;
+export const DEFAULT_BREAK_DURATION = 300;
 
 export interface TimerState {
   mode: TimerMode;
@@ -90,6 +90,21 @@ function createTimer() {
 
   subscribe(saveState);
 
+  function ensureInterval() {
+    if (interval != null) return;
+    interval = setInterval(() => {
+      update(s => {
+        const next = tick(s);
+        saveState(next);
+        if (!next.running && interval) {
+          clearInterval(interval);
+          interval = null;
+        }
+        return next;
+      });
+    }, 1000);
+  }
+
   function deriveRunningState(state: TimerState, now: number): TimerState {
     const elapsedSeconds = Math.floor((now - state.startTime!) / 1000);
     if (elapsedSeconds <= 0) return state;
@@ -163,19 +178,8 @@ function createTimer() {
 
   function start() {
     update(state => {
-      if (interval == null && state.remaining > 0) {
-        // Start interval if not already started and timer should be running
-        interval = setInterval(() => {
-          update(s => {
-            const next = tick(s);
-            saveState(next);
-            if (!next.running && interval) {
-              clearInterval(interval);
-              interval = null;
-            }
-            return next;
-          });
-        }, 1000);
+      if (state.remaining > 0) {
+        ensureInterval();
       }
       const now = Date.now();
       const startTime =
@@ -241,6 +245,37 @@ function createTimer() {
     setMode('custom', duration);
   }
 
+  function setProgress(progress: number) {
+    update(state => {
+      const clamped = Math.max(0, Math.min(1, progress));
+      const totalDuration = state.workDuration + DEFAULT_BREAK_DURATION;
+      const elapsed = clamped * totalDuration;
+      let mode: TimerMode;
+      let duration: number;
+      let remaining: number;
+      if (elapsed <= state.workDuration) {
+        mode = state.workMode;
+        duration = state.workDuration;
+        remaining = Math.round(duration - elapsed);
+      } else {
+        mode = 'break';
+        duration = DEFAULT_BREAK_DURATION;
+        remaining = Math.round(duration - (elapsed - state.workDuration));
+      }
+      remaining = Math.max(0, Math.min(duration, remaining));
+      const startTime =
+        state.running
+          ? Date.now() - Math.max(0, duration - remaining) * 1000
+          : null;
+      const next = { ...state, mode, duration, remaining, startTime };
+      if (next.running && interval == null && next.remaining > 0) {
+        ensureInterval();
+      }
+      saveState(next);
+      return next;
+    });
+  }
+
   return {
     subscribe,
     start,
@@ -248,6 +283,7 @@ function createTimer() {
     stop,
     setMode,
     setCustom,
+    setProgress,
     restore() {
       const state = loadState();
       set(state);
