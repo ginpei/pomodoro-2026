@@ -1,9 +1,34 @@
-import { writable, type Writable } from 'svelte/store';
+import { get, writable, type Writable } from 'svelte/store';
 
 export interface Task {
   id: string;
   name: string;
 }
+
+const SELECTED_TASK_KEY = 'pomodoro-selected-task';
+
+function createSelectedTaskId() {
+  let initial: string | null = null;
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem(SELECTED_TASK_KEY);
+    initial = stored ? stored : null;
+  }
+  const { subscribe, set }: Writable<string | null> = writable(initial);
+
+  if (typeof window !== 'undefined') {
+    subscribe(value => {
+      if (value) {
+        localStorage.setItem(SELECTED_TASK_KEY, value);
+      } else {
+        localStorage.removeItem(SELECTED_TASK_KEY);
+      }
+    });
+  }
+
+  return { subscribe, set };
+}
+
+export const selectedTaskId = createSelectedTaskId();
 
 function createTasks() {
   let initial: Task[] = [];
@@ -16,6 +41,10 @@ function createTasks() {
   if (typeof window !== 'undefined') {
     subscribe(tasks => {
       localStorage.setItem('tasks', JSON.stringify(tasks));
+      const selected = get(selectedTaskId);
+      if (selected && !tasks.some(task => task.id === selected)) {
+        selectedTaskId.set(null);
+      }
     });
   }
 

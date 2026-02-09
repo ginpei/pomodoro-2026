@@ -1,21 +1,30 @@
 <script lang="ts">
-import { tasks, type Task } from '$lib/tasks';
+import { selectedTaskId, tasks, type Task } from '$lib/tasks';
 import { get } from 'svelte/store';
 let taskList: Task[] = [];
+let activeTaskId = get(selectedTaskId);
 let hydrated = false;
 const unsubTasks = tasks.subscribe(v => {
   taskList = v;
+});
+const unsubSelected = selectedTaskId.subscribe(v => {
+  activeTaskId = v;
 });
 onMount(() => {
   hydrated = true;
 });
 
-import { onMount, tick } from 'svelte';
+import { onDestroy, onMount, tick } from 'svelte';
 let newTask = '';
 let editingId: string | null = null;
 let editingName = '';
 let newTaskInput: HTMLInputElement;
 let editInputs: Record<string, HTMLInputElement> = {};
+
+onDestroy(() => {
+  unsubTasks();
+  unsubSelected();
+});
 
 async function addTask() {
   if (newTask.trim()) {
@@ -49,6 +58,9 @@ function cancelEdit() {
 function deleteTask(id: string) {
   tasks.deleteTask(id);
 }
+function toggleSelect(id: string) {
+  selectedTaskId.set(activeTaskId === id ? null : id);
+}
 </script>
 
 <div class="mt-6 w-full max-w-xs mx-auto">
@@ -81,6 +93,12 @@ function deleteTask(id: string) {
             <button class="bg-gray-400 text-white px-2 py-1 rounded" on:click={cancelEdit}>Cancel</button>
           {:else}
             <span class="flex-1">{task.name}</span>
+            <button
+              class={`px-2 py-1 rounded text-white ${activeTaskId === task.id ? 'bg-blue-600' : 'bg-blue-500'}`}
+              on:click={() => toggleSelect(task.id)}
+            >
+              {activeTaskId === task.id ? 'Active' : 'Select'}
+            </button>
             <button class="bg-yellow-500 text-white px-2 py-1 rounded" on:click={() => startEdit(task.id, task.name)}>Edit</button>
             <button class="bg-red-500 text-white px-2 py-1 rounded" on:click={() => deleteTask(task.id)}>Delete</button>
           {/if}

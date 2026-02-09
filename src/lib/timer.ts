@@ -11,6 +11,7 @@ export interface TimerState {
   duration: number; // seconds
   remaining: number; // seconds
   running: boolean;
+  startTime: number | null; // ms since epoch when current phase started
   workDuration: number; // seconds
   workMode: 'work' | 'custom';
 }
@@ -51,7 +52,24 @@ function createTimer() {
             ? parsed.remaining
             : duration;
         const running = typeof parsed.running === 'boolean' ? parsed.running : false;
-        return { mode, duration, remaining, running, workDuration, workMode };
+        const parsedStartTime = typeof parsed.startTime === 'number' ? parsed.startTime : null;
+        let startTime = running ? parsedStartTime : null;
+        if (running && startTime == null) {
+          startTime = Date.now() - Math.max(0, duration - remaining) * 1000;
+        }
+        let state: TimerState = {
+          mode,
+          duration,
+          remaining,
+          running,
+          startTime,
+          workDuration,
+          workMode
+        };
+        if (state.running && state.startTime != null) {
+          state = deriveRunningState(state, Date.now());
+        }
+        return state;
       }
     } catch {}
     return {
@@ -59,6 +77,7 @@ function createTimer() {
       duration: DEFAULT_WORK_DURATION,
       remaining: DEFAULT_WORK_DURATION,
       running: false,
+      startTime: null,
       workDuration: DEFAULT_WORK_DURATION,
       workMode: 'work'
     };
@@ -71,6 +90,43 @@ function createTimer() {
 
   subscribe(saveState);
 
+  function deriveRunningState(state: TimerState, now: number): TimerState {
+    const elapsedSeconds = Math.floor((now - state.startTime!) / 1000);
+    if (elapsedSeconds <= 0) return state;
+    if (elapsedSeconds < state.duration) {
+      return { ...state, remaining: state.duration - elapsedSeconds };
+    }
+    const overflow = elapsedSeconds - state.duration;
+    if (state.mode === 'break') {
+      return {
+        ...state,
+        mode: state.workMode,
+        duration: state.workDuration,
+        remaining: state.workDuration,
+        running: false,
+        startTime: null
+      };
+    }
+    if (overflow < DEFAULT_BREAK_DURATION) {
+      return {
+        ...state,
+        mode: 'break',
+        duration: DEFAULT_BREAK_DURATION,
+        remaining: DEFAULT_BREAK_DURATION - overflow,
+        running: true,
+        startTime: now - overflow * 1000
+      };
+    }
+    return {
+      ...state,
+      mode: state.workMode,
+      duration: state.workDuration,
+      remaining: state.workDuration,
+      running: false,
+      startTime: null
+    };
+  }
+
   function transitionPhase(state: TimerState): TimerState {
     if (state.mode === 'break') {
       return {
@@ -78,7 +134,8 @@ function createTimer() {
         mode: state.workMode,
         duration: state.workDuration,
         remaining: state.workDuration,
-        running: false
+        running: false,
+        startTime: null
       };
     }
     return {
@@ -86,16 +143,22 @@ function createTimer() {
       mode: 'break',
       duration: DEFAULT_BREAK_DURATION,
       remaining: DEFAULT_BREAK_DURATION,
-      running: true
+      running: true,
+      startTime: Date.now()
     };
   }
 
   function tick(state: TimerState): TimerState {
     if (!state.running) return state;
-    if (state.remaining > 1) {
-      return { ...state, remaining: state.remaining - 1 };
+    const now = Date.now();
+    const startTime =
+      state.startTime ?? now - Math.max(0, state.duration - state.remaining) * 1000;
+    const elapsedSeconds = Math.floor((now - startTime) / 1000);
+    const remaining = Math.max(0, state.duration - elapsedSeconds);
+    if (remaining > 1) {
+      return { ...state, remaining, startTime };
     }
-    return transitionPhase(state);
+    return transitionPhase({ ...state, remaining, startTime });
   }
 
   function start() {
@@ -114,7 +177,10 @@ function createTimer() {
           });
         }, 1000);
       }
-      const next = { ...state, running: true };
+      const now = Date.now();
+      const startTime =
+        state.startTime ?? now - Math.max(0, state.duration - state.remaining) * 1000;
+      const next = { ...state, running: true, startTime };
       saveState(next);
       return next;
     });
@@ -126,7 +192,12 @@ function createTimer() {
         clearInterval(interval);
         interval = null;
       }
-      const next = { ...state, running: false };
+      const now = Date.now();
+      const remaining =
+        state.startTime == null
+          ? state.remaining
+          : Math.max(0, state.duration - Math.floor((now - state.startTime) / 1000));
+      const next = { ...state, running: false, remaining, startTime: null };
       saveState(next);
       return next;
     });
@@ -140,7 +211,8 @@ function createTimer() {
         mode: state.workMode,
         duration: state.workDuration,
         remaining: state.workDuration,
-        running: false
+        running: false,
+        startTime: null
       };
       saveState(next);
       return next;
@@ -156,6 +228,7 @@ function createTimer() {
         duration,
         remaining: duration,
         running: false,
+        startTime: null,
         workMode: mode === 'break' ? state.workMode : (mode === 'custom' ? 'custom' : 'work'),
         workDuration: mode === 'break' ? state.workDuration : duration
       };

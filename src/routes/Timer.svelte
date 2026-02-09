@@ -1,15 +1,27 @@
 <script lang="ts">
 import { timer } from '$lib/timer';
+import { selectedTaskId, tasks, type Task } from '$lib/tasks';
 import { onDestroy, onMount } from 'svelte';
 import { get } from 'svelte/store';
 let timerValue = get(timer);
+let taskList: Task[] = [];
+let activeTaskId: string | null = null;
+let activeTask: Task | null = null;
 let hydrated = false;
 onMount(() => {
   timer.restore();
   hydrated = true;
 });
 const unsubscribe = timer.subscribe(value => timerValue = value);
-onDestroy(unsubscribe);
+const unsubscribeTasks = tasks.subscribe(value => taskList = value);
+const unsubscribeSelected = selectedTaskId.subscribe(value => activeTaskId = value);
+onDestroy(() => {
+  unsubscribe();
+  unsubscribeTasks();
+  unsubscribeSelected();
+});
+
+$: activeTask = taskList.find(task => task.id === activeTaskId) ?? null;
 
 function start() { timer.start(); }
 function pause() { timer.pause(); }
@@ -51,10 +63,7 @@ function getHandProgress(timerValue: any) {
       <button class="px-4 py-2 rounded bg-yellow-500 text-white disabled:bg-yellow-200 disabled:opacity-60" disabled>Pause</button>
       <button class="px-4 py-2 rounded bg-red-500 text-white disabled:opacity-60" disabled>Stop</button>
     </div>
-    <div class="flex gap-2">
-      
-    </div>
-    <div class="text-gray-300 animate-pulse">Mode: --</div>
+    <div class="text-gray-300 animate-pulse">Task: --</div>
   </div>
 {:else}
   <div class="flex flex-col items-center gap-4">
@@ -93,9 +102,7 @@ function getHandProgress(timerValue: any) {
       <button class="px-4 py-2 rounded bg-yellow-500 text-white disabled:bg-yellow-200" on:click={pause} disabled={!timerValue.running}>Pause</button>
       <button class="px-4 py-2 rounded bg-red-500 text-white" on:click={stop}>Stop</button>
     </div>
-    <div class="flex gap-2">
-      
-    </div>
+    <div class="text-sm text-gray-700">Task: {activeTask ? activeTask.name : 'None'}</div>
     
   </div>
 {/if}
