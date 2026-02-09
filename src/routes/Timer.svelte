@@ -16,6 +16,7 @@ let dragProgress: number | null = null;
 let dragBaseState: TimerState | null = null;
 const CENTER = 80;
 const RADIUS = 70;
+const SECOND_RADIUS = 56;
 const OUTSIDE_THRESHOLD = 48;
 onMount(() => {
   timer.restore();
@@ -51,6 +52,11 @@ function getHandProgress(state: TimerState) {
     return (workLength + (breakLength - state.remaining)) / totalLength;
   }
   return (workLength - state.remaining) / totalLength;
+}
+
+function getSecondHandProgress(state: TimerState) {
+  const secondsInMinute = ((state.remaining % 60) + 60) % 60;
+  return ((60 - secondsInMinute) % 60) / 60;
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -206,6 +212,15 @@ $: breakDash = 2 * Math.PI * RADIUS * (breakDuration / totalDuration);
         y2="{CENTER + RADIUS * Math.sin(2 * Math.PI * (getHandProgress(displayValue)) - Math.PI / 2)}"
         stroke="#ef4444"
         stroke-width="6"
+        stroke-linecap="round"
+      />
+      <line
+        x1="{CENTER}"
+        y1="{CENTER}"
+        x2="{CENTER + SECOND_RADIUS * Math.cos(2 * Math.PI * (getSecondHandProgress(displayValue)) - Math.PI / 2)}"
+        y2="{CENTER + SECOND_RADIUS * Math.sin(2 * Math.PI * (getSecondHandProgress(displayValue)) - Math.PI / 2)}"
+        stroke="#111827"
+        stroke-width="2"
         stroke-linecap="round"
       />
       <text x="{CENTER}" y="{CENTER + 10}" text-anchor="middle" font-size="32" fill="#111827">{format(displayValue.remaining)}</text>
