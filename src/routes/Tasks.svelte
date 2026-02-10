@@ -38,9 +38,9 @@
     taskStore.selectTask(event.detail);
   }
 
-  function handleMove(event: CustomEvent<{ id: string; toId: string | null; newState: string }>) {
+  function handleMove(event: CustomEvent<{ id: string; toId: string | null; newState: string; after?: boolean }>) {
     // Move task to new state and reorder within group
-    const { id, toId, newState } = event.detail;
+    const { id, toId, newState, after } = event.detail;
     taskStore.setTaskState(id, newState);
     const tasks = get(taskStore).tasks;
     const groupTasks = tasks.filter(t => t.state === newState);
@@ -48,7 +48,11 @@
     if (toId) {
       toIndex = groupTasks.findIndex(t => t.id === toId);
       if (toIndex >= 0) {
-        taskStore.reorderTask(id, tasks.findIndex(t => t.id === toId));
+        let targetIndex = tasks.findIndex(t => t.id === toId);
+        if (after) {
+          targetIndex += 1;
+        }
+        taskStore.reorderTask(id, targetIndex);
       }
     } else {
       // Dropped on group title: move to start of group

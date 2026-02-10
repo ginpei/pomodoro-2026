@@ -26,7 +26,7 @@
     select: string | null;
     edit: { id: string; name: string };
     delete: string;
-    move: { id: string; toId: string | null; newState: TaskStateName };
+    move: { id: string; toId: string | null; newState: TaskStateName; after?: boolean };
   }>();
 
   let editingId: string | null = null;
@@ -34,6 +34,7 @@
   let editInputs: Record<string, HTMLInputElement> = {};
   let draggingId: string | null = null;
   let dragOverId: string | null = null;
+  let dragOverAfter = false;
   let draggingIndex = -1;
   let dragOverIndex = -1;
   let isMovingDown = false;
@@ -100,6 +101,10 @@
     if (taskId) {
       dragOverId = taskId;
       dragOverGroup = null;
+      const rect = item?.getBoundingClientRect();
+      if (rect) {
+        dragOverAfter = event.clientY > rect.top + rect.height / 2;
+      }
     } else {
       const groupItem = target?.closest?.('li[data-group-title]') as HTMLElement | null;
       const group = groupItem?.dataset?.groupTitle as TaskStateName | undefined;
@@ -117,6 +122,7 @@
     }
     const fromId = draggingId;
     const toId = dragOverId;
+    const toAfter = dragOverAfter;
     const toGroup = dragOverGroup;
     draggingId = null;
     dragOverId = null;
@@ -139,7 +145,7 @@
         break;
       }
     }
-    dispatch('move', { id: fromId, toId, newState: group });
+    dispatch('move', { id: fromId, toId, newState: group, after: toAfter });
   }
 </script>
 
@@ -168,7 +174,7 @@
           </li>
         {/if}
       {:else}
-        {#if draggingId != null && dragOverId === item.task.id && draggingId !== item.task.id && !isMovingDown}
+        {#if draggingId != null && dragOverId === item.task.id && draggingId !== item.task.id && !dragOverAfter}
           <li class="mb-2">
             <div class="h-0.5 bg-blue-500 rounded"></div>
           </li>
@@ -219,7 +225,7 @@
             </button>
           {/if}
         </li>
-        {#if draggingId != null && dragOverId === item.task.id && draggingId !== item.task.id && isMovingDown}
+        {#if draggingId != null && dragOverId === item.task.id && draggingId !== item.task.id && dragOverAfter}
           <li class="mb-2">
             <div class="h-0.5 bg-blue-500 rounded"></div>
           </li>
