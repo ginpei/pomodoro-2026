@@ -4,7 +4,7 @@
 
   import type { TaskStateName } from '$lib/tasks';
   export let tasks: Task[] = [];
-  export let activeTaskId: string | null = null;
+
   export let hydrated = false;
 
   const GROUPS: TaskStateName[] = ['complete', 'in progress', 'todo', 'later'];
@@ -23,7 +23,6 @@
 
 
   const dispatch = createEventDispatcher<{
-    select: string | null;
     edit: { id: string; name: string };
     delete: string;
     move: { id: string; toId: string | null; newState: TaskStateName; after?: boolean };
@@ -71,9 +70,7 @@
     dispatch('delete', id);
   }
 
-  function toggleSelect(id: string) {
-    dispatch('select', activeTaskId === id ? null : id);
-  }
+
 
   function startDrag(event: PointerEvent, id: string) {
     if (editingId) {
@@ -211,12 +208,7 @@
               ::
             </button>
             <span class="flex-1">{item.task.name}</span>
-            <button
-              class={`px-2 py-1 rounded text-white ${activeTaskId === item.task.id ? 'bg-blue-600' : 'bg-blue-500'}`}
-              on:click={() => toggleSelect(item.task.id)}
-            >
-              {activeTaskId === item.task.id ? 'Active' : 'Select'}
-            </button>
+            
             <button class="bg-yellow-500 text-white px-2 py-1 rounded" on:click={() => startEdit(item.task.id, item.task.name)}>
               Edit
             </button>

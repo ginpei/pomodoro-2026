@@ -8,19 +8,15 @@ export interface Task {
 
 export interface TaskState {
   tasks: Task[];
-  selectedTaskId: string | null;
+
 }
 
 export function normalizeTaskState(input?: Partial<TaskState>): TaskState {
   const tasks = Array.isArray(input?.tasks)
     ? input!.tasks.map(task => ({ ...task, state: task.state ?? 'todo' }))
     : [];
-  const selectedTaskId =
-    typeof input?.selectedTaskId === 'string' ? input.selectedTaskId : null;
-  const hasSelected = selectedTaskId != null && tasks.some(task => task.id === selectedTaskId);
   return {
-    tasks,
-    selectedTaskId: hasSelected ? selectedTaskId : null
+    tasks
   };
 }
 
@@ -41,13 +37,7 @@ export function deleteTask(state: TaskState, id: string): TaskState {
   return { tasks, selectedTaskId };
 }
 
-export function selectTask(state: TaskState, id: string | null): TaskState {
-  if (id == null) {
-    return { ...state, selectedTaskId: null };
-  }
-  const exists = state.tasks.some(task => task.id === id);
-  return { ...state, selectedTaskId: exists ? id : null };
-}
+
 
 export function setTasks(state: TaskState, tasks: Task[]): TaskState {
   // Ensure all tasks have a state property

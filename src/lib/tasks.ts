@@ -5,7 +5,6 @@ import {
   editTask as editTaskInState,
   normalizeTaskState,
   reorderTasks as reorderTasksInState,
-  selectTask as selectTaskInState,
   setTasks as setTasksInState,
   setTaskState as setTaskStateInState,
   type Task,
@@ -28,7 +27,7 @@ export interface TaskStoreOptions {
 }
 
 const TASKS_KEY = 'tasks';
-const SELECTED_TASK_KEY = 'pomodoro-selected-task';
+
 
 function createNoopTaskStorage(): TaskStorage {
   return {
@@ -86,14 +85,14 @@ export function createTaskStore(options: TaskStoreOptions = {}) {
     ? normalizeTaskState(options.initialState)
     : normalizeTaskState({
         tasks: storage.loadTasks(),
-        selectedTaskId: storage.loadSelectedTaskId()
+
       });
 
   const { subscribe, update, set }: Writable<TaskState> = writable(initial);
 
   function persist(state: TaskState) {
     storage.saveTasks(state.tasks);
-    storage.saveSelectedTaskId(state.selectedTaskId);
+
   }
 
   subscribe(persist);
@@ -110,9 +109,7 @@ export function createTaskStore(options: TaskStoreOptions = {}) {
     update(state => deleteTaskFromState(state, id));
   }
 
-  function selectTask(id: string | null) {
-    update(state => selectTaskInState(state, id));
-  }
+
 
   function setTasks(tasks: Task[]) {
     update(state => setTasksInState(state, tasks));
@@ -135,7 +132,7 @@ export function createTaskStore(options: TaskStoreOptions = {}) {
     addTask,
     editTask,
     deleteTask,
-    selectTask,
+
     setTasks,
     setTaskState,
     reorderTask,

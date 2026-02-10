@@ -3,19 +3,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 function createMemoryStorage() {
   let tasks: TaskState['tasks'] = [];
-  let selectedTaskId: string | null = null;
   return {
     loadTasks() {
       return tasks;
     },
-    loadSelectedTaskId() {
-      return selectedTaskId;
-    },
     saveTasks(next: TaskState['tasks']) {
       tasks = next;
-    },
-    saveSelectedTaskId(next: string | null) {
-      selectedTaskId = next;
     }
   };
 }
@@ -56,13 +49,7 @@ describe('task store', () => {
     expect(state.tasks[0].name).toBe('Updated');
   });
 
-  it('clears selection when deleting selected task', () => {
-    store.addTask('First');
-    store.selectTask('task-1');
-    store.deleteTask('task-1');
-    const state = getState(store);
-    expect(state.selectedTaskId).toBe(null);
-  });
+
 
   it('reorders tasks within group', () => {
     store.addTask('First', 'todo');

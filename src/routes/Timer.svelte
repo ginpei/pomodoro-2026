@@ -58,12 +58,12 @@
       <button class="px-4 py-2 rounded bg-yellow-500 text-white disabled:bg-yellow-200 disabled:opacity-60" disabled>Pause</button>
       <button class="px-4 py-2 rounded bg-red-500 text-white disabled:opacity-60" disabled>Reset</button>
     </div>
-    <div class="text-gray-300 animate-pulse">Task: --</div>
+
   </div>
 {:else}
   <div class="flex flex-col items-center gap-4">
     <TimerDial value={timerValue} on:setProgress={setProgress} />
     <TimerControls running={timerValue.running} on:start={start} on:pause={pause} on:reset={reset} />
-    <div class="text-sm text-gray-700">Task: {activeTask ? activeTask.name : 'None'}</div>
+
   </div>
 {/if}

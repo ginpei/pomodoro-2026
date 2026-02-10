@@ -7,11 +7,11 @@
 
   const initial = get(taskStore);
   let taskList: Task[] = initial.tasks;
-  let activeTaskId: string | null = initial.selectedTaskId;
+
   let hydrated = false;
   const unsubTasks = taskStore.subscribe(v => {
     taskList = v.tasks;
-    activeTaskId = v.selectedTaskId;
+
   });
 
   onMount(() => {
@@ -34,9 +34,7 @@
     taskStore.deleteTask(event.detail);
   }
 
-  function handleSelect(event: CustomEvent<string | null>) {
-    taskStore.selectTask(event.detail);
-  }
+
 
   function handleMove(event: CustomEvent<{ id: string; toId: string | null; newState: string; after?: boolean }>) {
     // Move task to new state and reorder within group
@@ -68,11 +66,11 @@
   <TaskInput on:add={handleAdd} />
   <TaskList
     tasks={taskList}
-    activeTaskId={activeTaskId}
+
     hydrated={hydrated}
     on:edit={handleEdit}
     on:delete={handleDelete}
-    on:select={handleSelect}
+
     on:move={handleMove}
   />
 </div>
