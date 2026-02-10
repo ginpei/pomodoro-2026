@@ -18,6 +18,16 @@
     { type: 'group', group },
     ...tasks.filter(task => task.state === group).map(task => ({ type: 'task', task }))
   ]);
+  $: stateCounts = (() => {
+    const counts = GROUPS.reduce((acc, group) => {
+      acc[group] = 0;
+      return acc;
+    }, {} as Record<TaskStateName, number>);
+    for (const task of tasks) {
+      counts[task.state] = (counts[task.state] ?? 0) + 1;
+    }
+    return counts;
+  })();
 
   let dragOverGroup: TaskStateName | null = null;
 
@@ -163,7 +173,7 @@
           aria-disabled="true"
           data-group-title={item.group}
         >
-          {capitalize(item.group)}
+          {capitalize(item.group)} ({stateCounts[item.group] ?? 0})
         </li>
         {#if draggingId != null && dragOverGroup === item.group}
           <li class="mb-2">
