@@ -47,3 +47,18 @@ export function selectTask(state: TaskState, id: string | null): TaskState {
 export function setTasks(state: TaskState, tasks: Task[]): TaskState {
   return normalizeTaskState({ tasks, selectedTaskId: state.selectedTaskId });
 }
+
+export function reorderTasks(state: TaskState, taskId: string, toIndex: number): TaskState {
+  const fromIndex = state.tasks.findIndex(task => task.id === taskId);
+  if (fromIndex < 0) {
+    return state;
+  }
+  const clampedIndex = Math.max(0, Math.min(toIndex, state.tasks.length - 1));
+  if (fromIndex === clampedIndex) {
+    return state;
+  }
+  const tasks = [...state.tasks];
+  const [moved] = tasks.splice(fromIndex, 1);
+  tasks.splice(clampedIndex, 0, moved);
+  return { ...state, tasks };
+}

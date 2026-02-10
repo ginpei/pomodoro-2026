@@ -37,6 +37,10 @@
   function handleSelect(event: CustomEvent<string | null>) {
     taskStore.selectTask(event.detail);
   }
+
+  function handleReorder(event: CustomEvent<{ id: string; toIndex: number }>) {
+    taskStore.reorderTask(event.detail.id, event.detail.toIndex);
+  }
 </script>
 
 <div class="mt-6 w-full max-w-xs mx-auto">
@@ -49,5 +53,6 @@
     on:edit={handleEdit}
     on:delete={handleDelete}
     on:select={handleSelect}
+    on:reorder={handleReorder}
   />
 </div>

@@ -4,6 +4,7 @@ import {
   deleteTask as deleteTaskFromState,
   editTask as editTaskInState,
   normalizeTaskState,
+  reorderTasks as reorderTasksInState,
   selectTask as selectTaskInState,
   setTasks as setTasksInState,
   type Task,
@@ -116,6 +117,10 @@ export function createTaskStore(options: TaskStoreOptions = {}) {
     update(state => setTasksInState(state, tasks));
   }
 
+  function reorderTask(id: string, toIndex: number) {
+    update(state => reorderTasksInState(state, id, toIndex));
+  }
+
   function setState(state: TaskState) {
     set(normalizeTaskState(state));
   }
@@ -127,6 +132,7 @@ export function createTaskStore(options: TaskStoreOptions = {}) {
     deleteTask,
     selectTask,
     setTasks,
+    reorderTask,
     setState
   };
 }

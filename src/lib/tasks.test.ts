@@ -62,4 +62,13 @@ describe('task store', () => {
     const state = getState(store);
     expect(state.selectedTaskId).toBe(null);
   });
+
+  it('reorders tasks', () => {
+    store.addTask('First');
+    store.addTask('Second');
+    store.addTask('Third');
+    store.reorderTask('task-3', 0);
+    const state = getState(store);
+    expect(state.tasks.map(task => task.id)).toEqual(['task-3', 'task-1', 'task-2']);
+  });
 });
