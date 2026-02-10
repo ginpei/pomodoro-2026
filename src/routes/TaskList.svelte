@@ -169,7 +169,7 @@
     {#each groupedList as item, i}
       {#if item.type === 'group'}
         <li
-          class="font-bold text-gray-700 select-none cursor-default opacity-80"
+          class="text-sm text-gray-700 select-none cursor-default opacity-80"
           aria-disabled="true"
           data-group-title={item.group}
         >
