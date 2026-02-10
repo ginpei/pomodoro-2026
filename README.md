@@ -2,6 +2,10 @@
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
+## Task State Grouping
+
+Tasks are grouped by state: **complete**, **in progress**, **todo**, **later**. Group titles are visually distinct and non-draggable. Drag tasks between groups to change their state and reorder within a group. You cannot drag tasks above the first group title.
+
 ## Creating a project
 
 If you're seeing this, you've probably already done this step. Congrats!

@@ -1,6 +1,9 @@
+export type TaskStateName = 'complete' | 'in progress' | 'todo' | 'later';
+
 export interface Task {
   id: string;
   name: string;
+  state: TaskStateName;
 }
 
 export interface TaskState {
@@ -9,7 +12,9 @@ export interface TaskState {
 }
 
 export function normalizeTaskState(input?: Partial<TaskState>): TaskState {
-  const tasks = Array.isArray(input?.tasks) ? input!.tasks : [];
+  const tasks = Array.isArray(input?.tasks)
+    ? input!.tasks.map(task => ({ ...task, state: task.state ?? 'todo' }))
+    : [];
   const selectedTaskId =
     typeof input?.selectedTaskId === 'string' ? input.selectedTaskId : null;
   const hasSelected = selectedTaskId != null && tasks.some(task => task.id === selectedTaskId);
@@ -19,8 +24,8 @@ export function normalizeTaskState(input?: Partial<TaskState>): TaskState {
   };
 }
 
-export function addTask(state: TaskState, name: string, id: string): TaskState {
-  return { ...state, tasks: [...state.tasks, { id, name }] };
+export function addTask(state: TaskState, name: string, id: string, taskState: TaskStateName = 'todo'): TaskState {
+  return { ...state, tasks: [...state.tasks, { id, name, state: taskState }] };
 }
 
 export function editTask(state: TaskState, id: string, name: string): TaskState {
@@ -45,7 +50,9 @@ export function selectTask(state: TaskState, id: string | null): TaskState {
 }
 
 export function setTasks(state: TaskState, tasks: Task[]): TaskState {
-  return normalizeTaskState({ tasks, selectedTaskId: state.selectedTaskId });
+  // Ensure all tasks have a state property
+  const normalized = tasks.map(task => ({ ...task, state: task.state ?? 'todo' }));
+  return normalizeTaskState({ tasks: normalized, selectedTaskId: state.selectedTaskId });
 }
 
 export function reorderTasks(state: TaskState, taskId: string, toIndex: number): TaskState {
@@ -61,4 +68,11 @@ export function reorderTasks(state: TaskState, taskId: string, toIndex: number):
   const [moved] = tasks.splice(fromIndex, 1);
   tasks.splice(clampedIndex, 0, moved);
   return { ...state, tasks };
+}
+
+export function setTaskState(state: TaskState, id: string, newState: TaskStateName): TaskState {
+  return {
+    ...state,
+    tasks: state.tasks.map(task => (task.id === id ? { ...task, state: newState } : task))
+  };
 }

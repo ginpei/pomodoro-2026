@@ -7,11 +7,12 @@ import {
   reorderTasks as reorderTasksInState,
   selectTask as selectTaskInState,
   setTasks as setTasksInState,
+  setTaskState as setTaskStateInState,
   type Task,
   type TaskState
 } from './tasks-model';
 
-export type { Task, TaskState } from './tasks-model';
+export type { Task, TaskState, TaskStateName } from './tasks-model';
 
 export interface TaskStorage {
   loadTasks(): Task[];
@@ -97,8 +98,8 @@ export function createTaskStore(options: TaskStoreOptions = {}) {
 
   subscribe(persist);
 
-  function addTask(name: string) {
-    update(state => addTaskToState(state, name, generateId()));
+  function addTask(name: string, taskState: TaskStateName = 'todo') {
+    update(state => addTaskToState(state, name, generateId(), taskState));
   }
 
   function editTask(id: string, name: string) {
@@ -117,6 +118,10 @@ export function createTaskStore(options: TaskStoreOptions = {}) {
     update(state => setTasksInState(state, tasks));
   }
 
+  function setTaskState(id: string, newState: TaskStateName) {
+    update(state => setTaskStateInState(state, id, newState));
+  }
+
   function reorderTask(id: string, toIndex: number) {
     update(state => reorderTasksInState(state, id, toIndex));
   }
@@ -132,6 +137,7 @@ export function createTaskStore(options: TaskStoreOptions = {}) {
     deleteTask,
     selectTask,
     setTasks,
+    setTaskState,
     reorderTask,
     setState
   };

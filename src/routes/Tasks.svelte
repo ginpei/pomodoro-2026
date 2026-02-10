@@ -38,8 +38,24 @@
     taskStore.selectTask(event.detail);
   }
 
-  function handleReorder(event: CustomEvent<{ id: string; toIndex: number }>) {
-    taskStore.reorderTask(event.detail.id, event.detail.toIndex);
+  function handleMove(event: CustomEvent<{ id: string; toId: string | null; newState: string }>) {
+    // Move task to new state and reorder within group
+    const { id, toId, newState } = event.detail;
+    taskStore.setTaskState(id, newState);
+    const tasks = get(taskStore).tasks;
+    const groupTasks = tasks.filter(t => t.state === newState);
+    let toIndex = 0;
+    if (toId) {
+      toIndex = groupTasks.findIndex(t => t.id === toId);
+      if (toIndex >= 0) {
+        taskStore.reorderTask(id, tasks.findIndex(t => t.id === toId));
+      }
+    } else {
+      // Dropped on group title: move to start of group
+      if (groupTasks.length > 0) {
+        taskStore.reorderTask(id, tasks.findIndex(t => t.id === groupTasks[0].id));
+      }
+    }
   }
 </script>
 
@@ -53,6 +69,6 @@
     on:edit={handleEdit}
     on:delete={handleDelete}
     on:select={handleSelect}
-    on:reorder={handleReorder}
+    on:move={handleMove}
   />
 </div>
