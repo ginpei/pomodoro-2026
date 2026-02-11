@@ -3,5 +3,5 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
-	base: '/pomodoro-2026/'
+	base: '/pomodoro-2026'
 });
