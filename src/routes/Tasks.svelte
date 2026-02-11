@@ -63,7 +63,7 @@
 
 <div class="mt-6 w-full max-w-xs mx-auto">
   <h2 class="text-lg font-bold mb-2">Tasks</h2>
-  <TaskInput on:add={handleAdd} />
+  <TaskInput on:add={handleAdd} disabled={!hydrated} />
   <TaskList
     tasks={taskList}
 
