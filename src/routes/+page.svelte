@@ -3,6 +3,10 @@
   import Tasks from './Tasks.svelte';
 </script>
 
-<h1>Pomodoro Timer</h1>
+<svelte:head>
+  <title>Timer &amp; Tasks</title>
+</svelte:head>
+
+<h1>Timer &amp; Tasks</h1>
 <Timer />
 <Tasks />
