@@ -44,3 +44,7 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+
+## Deploying to GitHub Pages
+
+This repository deploys via GitHub Actions (`.github/workflows/deploy.yml`) and publishes the `build/` output. In **Settings → Pages**, set **Source** to **GitHub Actions**. You do not need to pick a branch or directory when using the Actions-based deployment.
